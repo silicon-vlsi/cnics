@@ -8,10 +8,18 @@ Silicon University, Odisha
    :maxdepth: 2
    :caption: Content
 
-   getStarted
+   projects
+   trainings
+   people
+   publications
+   careers
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Wiki
 
-   cad-it
+   wiki-it
+   wiki-cad
+   wiki-test
+   wiki-resources 

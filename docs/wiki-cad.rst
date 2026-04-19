@@ -1,0 +1,966 @@
+CAD
+===
+
+This wiki contains all the details (except the private and propreitary
+info) for the CAD tools used at Advanced VLSI Lab at SIT, BBSR.
+
+TUTORIALS
+---------
+
+RTL-to-GDSII Using Synopsys Toolchain
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This instructions for the tutorial are from the **NES-2024** Workshop on
+**RTL-to-GDS flow using Synopsys toolchain for VLSI Aspirants** on Feb
+1, 2025 by Puneet Mittal from VLSI Expert.
+
+The instructions are derived from the workshop that you can view
+`here <https://youtu.be/jy5ro6cem3A>`__
+
+-  Untar the training tarball from
+   ``/CAD/trainings/RTL-to-GDS-NES24.tgz`` and cd to ``RTL2GDSII``
+
+-  open ``CONSTRAINTS/full_adder.sdc`` and get use to the file Synopsys
+   Design Contraints.
+
+-  check ``ref/tech/star_rcxt/saed32nm_1p9m_Cmax.tluplus`` : Tech
+   Parameters
+
+-  check ``ref/tech/star_rcxt/saed32nm_tf_itf_tluplus.map`` : Layer Maps
+
+-  check ``ref/lib/stdcell_rvt/saed32rvt_ss0p7vn40c.lib`` : STD CELL
+   libs
+
+-  ``cd test`` and tryout ``icc2_shell``, ``dc_shell``, etc.
+
+-  cd to ``RTL2GDSII/rtl`` and check out ``full_adder_rtl.v``
+
+-  Simulation:
+
+   -  ``cd ../rtl_simulation``
+   -  execute the commands from file ``vcs_commands``
+
+      -  ``vcs -full64 full_adder_tb.v -debug_access+all -lca -kdb`` to
+         compile
+
+         -  if you get ``gcc/c++`` errors: install them
+            ``sudo yum install gcc gcc-c++``
+
+      -  ``./simv Verdi``
+      -  ``verdi -ssf novas.fsdb -nologo &`` will launch the
+         IDE/debugger
+
+         -  Select the ports from the RTL, right click and
+            ``send to Waveform`` to send the signals to the waveform
+            viewer.
+         -  FRom the instance window, click ``dut`` and click the
+            “Schematic” icon from the menu bar.
+
+-  Synthesis:
+
+   -  ``cd RTL2GDSII/DC``
+   -  Check the automated script ``run_dc.tcl``
+   -  Check the ``./rm_setup/dc/setup.tcl`` for lib,etc..
+   -  Now run ``dc_shell``
+
+      -  ``dc_shell> start_gui``
+
+   -  In the non-gui ``dc_shell> source run_dc.tcl``
+   -  After successful synthesis, you will see the synthesized netlist
+      in the dc gui. You can click on the top module
+      (e.g. ``full_adder``) and right click and select “Schematic View”
+      to opn the schematic. If you double click on the top module, you
+      will see the netlist of std cells.
+   -  Now let us see you want to exclude a certain std cell (eg.AO):
+
+      -  ``dc_shell> set dont_use [get_lib_cells */AO*]``
+      -  ``dc_shell> compile`` Now you should not see any A0 cells in
+         the netlist.
+
+   -  Read the constraint filei and compile:
+
+      -  ``read_sdc ./../CONSTRAINTS/full_adder.sdc``
+      -  ``compile``
+      -  Looking at the schematic, it has more devices, effectively to
+         meet timing.
+
+   -  ``write -format verilog -hierarchy -output results/full_adder.mapped.v``
+
+      -  This is what is going to be used by ``icc2``
+      -  Check the gate-level netlist
+         ``cat results/full_adder.mapped.v``
+
+-  ICC2 PNR/etc
+
+   -  cd RTL2GDSII/ICC2
+
+   -  check ``RTL2GDSII/ICCII/scripts/floorplan.tcl``
+
+   -  There are 3 scenarios in the floorplan. Converted them to 3
+      seprate scripts: ``floorplan1/2/3.tcl``
+
+   -  | ``source scripts/floorplan1.tcl``
+
+   -  First 2 scenarios run fine, 3rd has an overutilization error. In
+      the ``initialize_floorplan`` command, I increased the side lengths
+      from {20 30 20 20} to {25 35 25 25} and that fixed it. Probably a
+      overkill.
+
+   -  \**NOTE\* Using the sdc file to constrain the design results in
+      more gates that does not fit in the original area. During demo,
+      Puneet did use the constraint file for the floorplan.
+
+   -  Power Railing: check ``scripts/power_railing.tcl``
+
+   -  ``source scripts/power_planning.tcl``
+
+      -  You should see the power rails in the GUI.
+
+   -  PLacement: check ``scripts/placement.tcl``
+
+      -  \`source scripts/placement
+
+   -  Route:
+
+      -  ``source scripts/route.tcl``
+
+         -  Looks like an eorror in the line 17. Comment it and rerun.
+
+Chip-to-Startup (C2S)
+---------------------
+
+C2S Registration
+~~~~~~~~~~~~~~~~
+
+-  Letter of undertaking
+-  Details of EDA tool required
+-  Synopsys agreement
+-  Cadence agreement
+-  Cadence Online Support agreement
+-  Unique host ID creation and sharing with ChipIN center
+-  Login to C2S support:
+
+   -  Request EDA tool access under C2S with the IP address(s)
+   -  Follow the steps given for the installation of individual tools
+      available in chipIn portal (Please look at the attached PDF)
+
+EDA License Access
+~~~~~~~~~~~~~~~~~~
+
+-  Need internet connectivity to access license server at
+   ``14.139.1.126``
+-  Submit ticket with ChipIN to whitelist your WAN IP to access license
+   server.
+
+   -  Login to ``https://chipin.cdacb.in``
+   -  Open ticket under help topic “**Request EDA tool access**”
+   -  Provide **Institute Name** and **WAN IP**
+
+      -  Get WAN IP either from sysadmin or web site eg. showmyip.com
+         etc
+      -  You can provide multiple WAN IPs too
+
+-  Check if WAN IP is whitelisted by navigating to
+   ``https://c2s.cdacb.in`` or ``https://14.139.1.126``
+
+   -  The status is printed on the browser
+
+-  Check license server access for eg. **Cadence**
+
+   -  ``nc -vz 14.139.1.126 5280`` (5281,5282)
+   -  **Siemens** ports: 1717, 36162
+   -  **Ansys** ports: 1056, 1055
+   -  **Keysight ADS RFMW/HSD/SystemVue**: 27009, 57551
+   -  **Cliosoft, Synopsys CC(?)**: 27008, 57552
+   -  **Synopsys Tools**: 27020, 27021
+   -  Note, the above ports need to opened up by sysadmin.
+
+Synopsys Tool Installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  Synopsys Portal: ``https://solvnetplus.synopsys.com``
+-  Download portal has the tool binaries for installation.
+-  ChipIn Portal: ``https://chipin-cloud.cdacb.in/``
+
+   -  Synopsys Bins: ``https://chipin-cloud.cdacb.in/index.php/f/627``
+   -  All tools, a bit older, are available on this portal and we have
+      installed from to be more compatible with CentOS 7.
+
+-  The credentials for both should be provided by C2S-CDAC.
+
+**INSTALLER**
+
+-  Before installing any of the EDA tools, we need to download and
+   install the *installer*:
+
+   -  Download the installer from
+      ``https://chipin-cloud.cdacb.in/index.php/f/627`` for eg.
+      ``installer_v5.6``
+   -  After extracting the installer ``cd`` to the directory eg.
+      ``installer_v5.6``
+   -  ``chmod 755 SynopsysInstaller_v5.6.run``
+   -  ``sudo ./SynopsysInstaller_v5.6.run`` : execute the installer
+
+      -  specify install directory eg. ``/usr/synopsys/installer``
+
+   -  Add the installer directory to the ``path``:
+      ``set path=(/usr/synopsys/installer $path)``
+
+**INSTALLING THE TOOLS**
+
+-  Invoke the installer as **non-root user** (eg. centos):
+   ``$ installer``
+
+   -  *Note*, if you are running installer as non-root (eg. centos),
+      then the target directory needs to have permission for that user
+      (eg. centos)
+   -  ``$installer -gui`` (or ``setup.csh``) for the GUI version.
+   -  If you must install from a root account, run ``installer`` with
+      the ``-install_as_root`` switch.
+
+-  When prompted, specify source directory containing the *Synopsys
+   Product files* (``*.spf``). for
+   e.g. ``/home/local/archive/CAD/synopsys/vcs_all_vU-2023.03``
+-  When prompted, specify target location eg. ``/home/nfs3/synopsys``
+
+   -  *NOTE*: Digital tools are intended to be installed in
+      ``srv03:/home/nfs3`` and ``../nfs4`` each ``100GB``
+
+-  The *source* and *target* can also be given as command line prompt:
+
+   -  ``installer -source <source dir> -target <target_dir>``
+
+**POST-INSTALLATION SETUP**
+
+-  Add the required environment variables in ``modulefile``
+
+   -  Add tool executables in the path
+      e.g. ``/CAD/synopsys/vcs/U-2023.03/bin``
+   -  Check tool-specific env variable setup e.g. ``$VCS_HOME``.
+   -  Set ``SNPSLMD_LICENSE_FILE`` env var to the correct ``port@host``
+
+CADENCE
+-------
+
+Solutions
+~~~~~~~~~
+
+**PROBLEM** When starting a tool (say ADE L), it’s only checking out
+that feature instead of going through a assigned list and finding the
+right one. For eg. ADE-L checkout ADE_Assembler license but it keeps
+failing because it keeps trying to check out ADE_L.
+
+**SOLUTION**
+
+-  Open ``~/.cdsenv`` and you may find a license line with option
+   “never” e.g.
+
+   -  ``license ADE_UseNextLicense      string  "never"``
+   -  Change “never” to ``"always"`` or ``"prompt"`` and that should fix
+      the issue.
+
+**ALT. SOLUTION**
+
+-  From the ``Virtuoso`` menu select ``Options -> Licensing``
+-  Select ``Ordering`` tab from the poped up dialog box.
+-  Set *all tool features* to ``Always`` using the drop-down menu.
+-  Click ``Save to File`` and close the license window and re-invoke the
+   tool
+
+Ocean
+~~~~~
+
+**Quick Command Reference**
+
+-  ``openResults("/simDir/input.raw")``: open the simulation results
+   from the simulation directory.
+
+   -  ``results()``: Shows available results in the current opened
+      result.
+
+-  ``selectResult('tran/'ac/etc)``: select one of the available results.
+
+   -  ``outputs()``: shows the available output nodes in the current
+      selected simulation type (ie. ac/tran/etc).
+
+-  ``plot(v("out1") v("out2") ?expr list("legend1" "legend2")``
+-  ``plot(vout ?strip list(2))``: Puts the plot in the current window
+   but second strip. Helpful when you have a bunch of plots and you want
+   to add another one in a separate strip.
+
+**Procedure**:
+
+::
+
+   procedure( procName(arg1 arg2)
+       prog( (localVar1 localVar2)
+           <ocean statements>
+           return(var)
+       )
+   )
+
+**Ocean Functions** - **gainMargin**:
+``getData("gainMargin" ?result "stb_margin")`` - **NOTE** For PSTB, you
+need evaluate the above function at the 0th harmonic ie.
+``value(getData("gainMargin" ?result "pstb_margin") 0)``. -
+**phaseMargin**: ``getData("phaseMargin" ?result "stb_margin")`` - See
+note for gainMargin. - **stb/pstb loopGain**:
+``getData("loopGain" ?result "stb/pstb")`` - **Onoise**:
+``getData("out" ?result "pnoise/noise")`` - **DC Operating Points**:
+``pv("I0.I1.Mdev1/V1" "id/vth/vds/i/etc" ?result "dcOpInfo" ?resultsDir "sims/input_0.raw")``
+- **Integrated Nosie**: ``sqrt(integ(v("/out")**2))`` - **Noise
+Summary**:
+``noiseSummary('spot/integrated ?resultsDir "sims/input.raw" ?result 'noise ?output "noiseSum.txt" ?frequency 1 ?noiseUnit "V" ?truncateType 'top ?truncateData 16 ?deviceType 'all)``
+- **NOTE1** you can extract the summary of one of the sweep values by
+passing ``?paramValues 1.0(say)``. See ``noiseSummarySweep()`` to see
+the usage. - **NOTE2** When the **noise Unit** is set to ``V``, the
+percentage reported is as percent of total power ie. v_n =
+:raw-latex:`\sqrt{x}` v_t. where v_n is the noise reported noise of each
+device in V, x is the reported percentage and v_t is the total power in
+``V``. Therefore, when plotting the contribution in ``V``, the
+differences are compressed due to the square-root relation. \* **NOTE-3
+(Weight File Format)**: The weight file can be
+magnitude(mag)(**IMPORTANT: weight of the noise power**) or decibels(dB)
+format:
+
+::
+
+   mag
+   10, 0.1
+   20, 0.12
+   .
+
+::
+
+   db
+   10, -20
+   20, -30
+   .
+
+**EXAMPLES**: -
+``noiseSummary( 'spot ?resultsDir "/usr/simulation/lowpass/spectre/schematic" ?result 'noise ?frequency 100M )``
+- Prints a report for a spot noise analysis at a frequency of 100M. -
+``noiseSummary( 'integrated ?resultsDir "/usr/simulation/lowpass/spectre/schematic" ?result 'noise )``
+- Prints a report for an integrated noise analysis for the results from
+a different run (stored in the schematic directory). -
+``noiseSummary('integrated ?truncateType 'none ?digits 10 ?weightFile "./weights.dat")``
+- Prints the weighted noise for an integrated noise analysis using
+information in the weight file weights.dat. -
+``noiseSummary('integrated ?output "./NoiseSum1" ?noiseUnit "V" ?truncateData 20 ?truncateType 'top ?from 10 ?to 10M ?deviceType list("bjt" "mos" "resistor"))``
+- Prints a report for an integrated noise analysis in the frequency
+range 10-10M for 20 components with deviceType bjt, mos or resistor. -
+``noiseSummary( 'integrated ?from 1 ?to 100M  ?truncateType 'top ?truncateData 20 ?deviceType 'all ?noiseUnit "V^2" ?output "./filename.ns" ?paramValues list(2.47e-9))``
+- Prints a report for an integrated noise analysis at a specific swept
+value. - **Unity GainBandwidth**:
+``cross(db20(getData("loopGain" ?result "stb")) 0 1 "either")`` - **3-db
+bandwidth**: ``bandwidth(v("output") 3 "low")`` - **delay**:
+``delay(?wf1 wave1 ?value1 thresh1 ?edge1 'rising ?nth1 nth_rise_edge ?wf2 wave2 ?value2 thresh2 ?edge2 'rising ?nth2 nth_rise_edge )``
+- **ocnPrint**:
+``ocnPrint(?output "out.dat"|pport wave1 wave2 .. ?numberNotation 'engineering)``
+- Do not confuse this with the local corner script ‘OcnPrint’ -
+**display**: ``display(object)`` eg. display(gainMargin) - **printf**:
+C-like.
+
+[FIXME: change the rest of the Ocean formating from dokuwiki to
+markdown]
+
+===== Functions for OcnPrint ===== To use the functions, first load in
+your icw window or put in your .cdsinit:
+load(“/home/srout/work/ocean/functions/freqUsedFns.il”) The following
+functions will be loaded: ==== stbSummary ==== stbSummary(?stbSim ‘stb
+?DCgainFreq 100 ) **Description**: This function when passed
+to’‘OcnPrint’‘, it returns a string for each corner containing the Phase
+Margin, Gain Margin, Unity Gain Bandwidth and the DC gain.\\
+**Arguments**: \*’‘?stbSim’’ : The simulation analysis type ie.
+‘’stb’‘(default) or’‘pstb’‘. \*’‘?DCgainFreq’’ : The frequency (in Hz)
+at which the gain is calculated. default: 100 **Output**: string eg. ’’
+“PhaseMargin(deg):raw-latex:`\t G`ainMargin(dB):raw-latex:`\t D`Cgain(dB):raw-latex:`\t 3`-db
+Bandwidth(Hz):raw-latex:`\t  U`nity-Gain Bandwidth(Hz)” ’‘\\
+**Example**: stbSummary() Will return stability results for the default
+settings ie. analysis type’‘stb’’ and and DC gain at 100Hz
+stbSummary(?stbSim ‘pstb ?DCgainFreq 1) Will return results for
+a’‘pstb’’ simulation and DC gain at 1 Hz.
+
+==== fnNonLin() ==== \* **FUNCTION**: ’’fnNonLin(
+
+.. raw:: html
+
+   <output signal name>
+
+<frequency(Hz)> ?parametric nil)’‘\\ \* **EXAMPLE**: \* Ocean:
+fnNonLin(v(“vout”) v(“vin”) 1e7 1e-3 5e-3 ?parametric nil) \* ADE-1:
+fnNonLin(VT(“/vout”) VT(“/vin”) 1e7 1e-3 5e-3 ?parametric nil) \* ADE-2:
+fnNonLin(VT(“/vout”) vin_amp 1e7 1e-3 5e-3 ?parametric t) \* FIXME :
+Need to verify the ADE-2 code. When in doubt use the ADE-1 method. \*
+**INPUT**: Either the a parametric simulation from ADE or a transient
+sweep using Spectre netlist. \* **OUTPUT**: Plot with x-axis as the
+input amplitude and y-axis is non-linearity in percentage. \*
+**DESCRIPTION**: This method calculates non-linearity of a circuit after
+running a sweep of different amplitude input signal and looking at the
+fundamental component of the output. The function linearizes about the
+two extreme points of the output and finds the error in percentage of
+the max output. \* **NOTES** \* This is the same function as used in the
+parametric sweep, except the option’‘parametric’’ is set to **nil** to
+indicate it is NOT a parametric sweep and therefore the second variable
+is interpreted as the input voltage instead of the sweep variable name.
+
+CORNER SIMULATION SCRIPTS
+-------------------------
+
+**Quick-Start** - Follow the instruction below to copy some of the
+example files to your work location. - To create the corner-list file
+use the following command: - ``createCorners TB-IO.par > TB-IO.clist`` -
+To create all the corner netlists in the directory say ``cnrSims`` with
+their appropriate corner variables: -
+``createEldoRuns TB-IO.clist TB-IO.cir -simdir=cnrSims`` -
+``cd cnrSims`` to run the simulations. - To test or debgug one corner
+say first corner: ``./runsim 0`` - To run all corners: ``./runsim all``
+- **IMPORTANT** Don’t kill the simulations by pressing ``Ctrl-C``,
+instead use the ``kill`` command OR ``pkill eldo`` and repeat till
+corners are killed. - After running all the corners, use the script
+``xtractEldoRuns`` to extract all the measured parameters from the
+corners runs and report in ``.csv`` format along with the min/max for
+each measures. - Below shows the detail description of the corner
+scripts.
+
+**/CAD/apps7/bin/createCorners**
+
+This is a simulation independent script which generates a *corner list
+file* from a simple input file. We will go through a simple example to
+demostrate the script. Before that, let’s create a working directory say
+``~/work/sim`` and ``cd`` to it. Let’s copy few files to it: -
+``cp /CAD/apps7/msim/TB-xt018-IO_CELLS_FC5V-BBSUD4FC.cir TB-IO.cir`` -
+``cp /CAD/apps7/bin/createCorners.par TB-IO.par`` - You can check the
+content of the parameter file ``TB-IO.apr``:
+
+::
+
+   // Example Parameter file
+   temp    20,125
+   VDDA    [4:1:5]
+   library default;3s;tm,default;3s;wp
+   {CLOAD,CZI}     1p;0.1p,10p;0.25p
+   //
+   simCMDoptions -alter 1 -aex
+
+-  Brief description of the parameter file:
+
+   -  ``//`` Comments start with two forward slashes.
+   -  ``temp 20,125``: ``temp`` is a **reserved** keyword for varying
+      **temperature**. Values are seprated by **commas (,)**. For
+      example in ``Eldo/HSpice`` this will result in two temperature:
+      ``.TEMP 20`` and ``.TEMP 125``
+   -  ``VDDA [4:1:5]``: ``VDDA`` is netlist parameter. Here the values
+      are given as vector range ``[<start>:<increment>:<stop>]``. This
+      example will result in two values ``VDDA=4`` and ``VDDA=5``.
+   -  ``library default;3s;tm,default;3s;wp``: ``library`` is a
+      **reserved** keyword for varying library calls primarily
+      **process** variation. Since in a netlist there can be multiple
+      library calls, the values are seprated by **semi-colon(;)** and
+      the corners are separated **commas (,)**. In this example when
+      used with ``TB-IO.cir`` will result in following two corners:
+   -  Corner-1:
+
+      -  ``.LIB <PATH>/config.lib default``
+      -  ``.LIB <PATH>/param.lib 3s``
+      -  ``.LIB <PATH>/xt018.lib tm``
+
+   -  Corner-2:
+
+      -  ``.LIB <PATH>/config.lib default``
+      -  ``.LIB <PATH>/param.lib 3s``
+      -  ``.LIB <PATH>/xt018.lib wp``
+
+   -  ``{CLOAD,CZI}     1p;0.1p,10p;0.25p``: If you want to vary more
+      than one variable for each corner, you define a composite variable
+      like this with the values for each corner seprated by
+      **semi-colons (;)** and corners serprated by **commas (,)**. In
+      this example for ``Eldo/HSpice`` will result in two corners:
+
+      -  Corner-1: ``.PARAM CLOAD=1p CZI=0.1p``
+      -  Corner-2: ``.PARAM CLOAD=10p CZI=0.25p``
+
+   -  The **ORDER** of the variables are important. The varaiation
+      starts from top to botomm for eg. in the above case, temperature
+      will varied first, then ``VDDA``, then ``library`` and so on.
+   -  ``simCMDoptions -alter 1 -aex``: ``simCMDoptions`` is a *optional*
+      **reserved** keyword which is passed to the simulator command-line
+      option.
+
+-  Now you can create the *corner-list file* by running the command:
+   -``createCorners TB-IO.par > TB-IO.clist``
+-  If you view the corner-list file ``TB-IO.clist``, the content will be
+   something like this:
+
+::
+
+   ## Input Parameter file: "TB-IO.par",  Date/time: 12:20:6, 4-25-2023
+   ## Corner summary:
+   ##  temp: (2) 20 125
+   ##  VDDA: (2) 4 5
+   ##  library: (2) default;3s;tm default;3s;wp
+   ##  {CLOAD,CZI}: (2) 1p;0.1p 10p;0.25p
+   ## Total number of simulations: 16
+   ##
+   ## Simulator command-line options:
+   simCMDoptions: { -alter 1 -aex}
+   ## Corner variables:
+   cnrVars: {CLOAD,CZI,library,VDDA,temp}
+   ## Simulation cases:
+   cnrSim[0]: {1p,0.1p,default;3s;tm,4,20}
+   cnrSim[1]: {1p,0.1p,default;3s;tm,4,125}
+   cnrSim[2]: {1p,0.1p,default;3s;tm,5,20}
+            :
+            :
+            :
+   cnrSim[14]: {10p,0.25p,default;3s;wp,5,20}
+   cnrSim[15]: {10p,0.25p,default;3s;wp,5,125}
+
+-  Brief description the corner list file:
+
+   -  First few commented (``#``) lines show the summary: no of
+      variables, how many variations and total number of simulations.
+   -  line starting with ``simCMDoptions`` contain anu simulator
+      command-line options.
+   -  ``cnrVars`` show all the corner variables.
+   -  lines starting with ``cnrSim[#]`` shows the corner numer (``#``)
+      followed by all the variables of the corners.
+
+-  The corner-list file will be used by a *simulation-specific* script
+   to generate all the corner netlist along with a shell-script to run
+   those corners.
+
+**/CAD/apps7/bin/createEldoRuns**:
+
+-  For ``Eldo``, use ``createEldoRuns`` as follows:
+
+   -  ``createEldoRuns TB-IO.clist TB-IO.cir -simdir=cnrSims``
+   -  This will create all the corner netlists in the directory
+      ``cnrSims`` with their appropriate corner variables.
+   -  It will also create a shell-script ``runsim`` that you can run to
+      simulate a single corner ``./runsim 0`` or all corners
+      ``./runsim all``
+
+**/CAD/apps7/bin/xtractEldoRuns**:
+
+This script is used to extract results from a Eldo corner run and
+display them in a ``.csv`` format. This script requires two files: the
+*Eldo netlist* that contains all the ``EXTRACT`` statements and the
+*corner-list* file that was created by the script ``createCorners``. You
+also should have run all corners using the ``createEldoCorners``.
+
+-  *Usage*:
+   ``xtractEldoRuns <corner-list file> <netlist> [-simdir=<SIM DIR> typCnrNum=<CnrSimNum> -outCol -ext=aex ]``
+
+   -  ``<corner-list>``: Name of the file containg all the corner
+      details created using ``createCorners``
+   -  ``<netlist>``: The Eldo/Spice netlist from which the ``EXTRACT``
+      stmnts are read from.
+   -  ``-simdir=<>``: [Optional] argument for specifying the directory
+      with all the corner runs. Default: Current directory.
+   -  ``-typCnrNum=<>``: [Optional] arg to specify the corner number
+      which will be considered as typical corner. Default: 0
+   -  ``-outCol``: Optional arg, if set, each corner will be displayed
+      as a coloumn instead of a row (default)
+   -  ``-ext=<str>``: Optional arg to change the extension of the file
+      from which the ``EXTRACT`` labels are read. Deafult: aex
+
+-  *Example*:
+   ``xtractEldoRuns TB-IO.clist TB-IO.cir -simdir=cnrSims -typCnrNum=6 -outCol -ext=log > TB-IO-tranient.csv``
+
+OPEN-SOURCE CUSTOM DESIGN FLOW
+------------------------------
+
+This section contains the instruction to setup open-source CAD tools
+(ngspice, Sue2, xschem, magic & netgen) in a Virtual Machine (Virtual
+Box) running a Ubuntu-based Linux distribution LXLE. Although the
+binaries of the CAD tools are compiled and tested on a 64-bit LXLE Linux
+distribution, it should run on other 64-bit Ubuntu or Debian based
+distribution like Xubuntu.
+
+-  `YouTube
+   PLaylist-OpenSourceEDA <https://www.youtube.com/playlist?list=PL7R2OODNugWFY2qeZ7qlVFNIkN8ABhuSO>`__:
+   Santunu Sarangi, Satabdi Panda and Pracheeta Mohapatra,
+   “`15VLSI7T <https://github.com/silicon-vlsi/15VLSI7T>`__:VLSI Design
+   Course for 7th Sem AEI, 2020” – Set of detailed videos of Labs
+   conducted for the course using ngspice, sue2, magic and netgen.
+
+SETTING UP LXLE LINUX ON VIRTUAL BOX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-  `Linux on Virtual
+   Box <https://www.dropbox.com/s/2lovix0ntsw8yfw/2020-0917-Open%20Source%20EDA%20Setup.pdf>`__:
+   Step-by-Step instruction on how to setup LInux LXLE on Virtual Box.
+-  Here are some of the essential steps:
+
+   -  Download and install Virtual Box (with default settings) from
+      http://virtualbox.org
+   -  Download the 64-bit Linux LXLE Iso Image from
+      http://www.lxle.net/download (eg. lxle-18043-64.iso). **NOTE** The
+      CAD tools are all compiled for 64-bit OS.
+   -  Start Virtual Box and click **New** and follow the steps to
+      complete the installation. Check the above
+      `doc <https://www.dropbox.com/s/2lovix0ntsw8yfw/2020-0917-Open%20Source%20EDA%20Setup.pdf>`__
+
+**DOWNLOAD AND SETUP THE CAD TOOLS**
+
+`YouTube Link <https://www.youtube.com/watch?v=GUHCrM-v24w>`__
+demonstrating the download and install of the following tools:
+
+-  `NGSPICE <https://github.com/silicon-vlsi-org/eda-ngspice>`__: See
+   Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-ngspice#downloading-&-setting-up-ngspice>`__.
+-  `SUE2 <https://github.com/silicon-vlsi-org/eda-sue2Plus>`__: See
+   Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-sue2Plus>`__
+-  `XSCHEME <https://github.com/silicon-vlsi-org/eda-xschem>`__: See
+   Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-xschem#downloading-&-setting-up-xschem>`__
+-  `MAGIC <https://github.com/silicon-vlsi-org/eda-magic>`__: See
+   Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-magic#downloading-&-setting-up-magic>`__
+-  `NETGEN <https://github.com/silicon-vlsi-org/eda-netgen>`__: See
+   Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-netgen#downloading-&-setting-up-netgen>`__
+-  `TECHNOLOGY <https://github.com/silicon-vlsi-org/eda-technology>`__:
+   See Download and Setup instruction in the `gitHub
+   page <https://github.com/silicon-vlsi-org/eda-technology>`__
+
+CLOUD-BASED MULTI-USER OPEN-SOURCE LAB (CMOSLab)
+------------------------------------------------
+
+The following instuction illustrates the steps to setup open-source EDA
+tools (ngspice, sue2, magic, netgen, etc.) on a Linux Virtual Machine in
+cloud. The steps illustrate **Ubuntu 18.04** with **LXDE display
+manager** on a `Digital Ocean <https://digitalocean.com>`__ Droplet
+(VM).
+
+-  Create a Virtual Machine (VM) or Droplet in Digital Ocean with
+   password option for ``root``.
+-  Login to the instance as root using PuTTy (or anything equivalent).
+-  Update the distro: ``#apt update; apt upgrade``
+-  create a user for admin purpose: ``#adduser <user>``
+-  Give the user ``sudo`` power: ``#usermod -a -G sudo <user>``
+-  Install the **LXDE** Display Manager and it’s depndencies+goodies:
+   ``#apt install lxde``
+
+   -  This will create all the necessary configs and session in
+      ``/etc/X11`` eg. ``Xsession`` etc.
+
+-  Install the **tightvncserver**: ``#apt install tightvncserver``
+-  Test vncserver by loging in as the user and set the vnc password:
+   ``$vncpasswd``
+
+   -  This will create ``$HOME/.vnc`` with a ``xstartup`` file with the
+      LXDE Xsession.
+
+-  Start the vncserver: ``$vncserver -depth 24 -geometry 1280x720 :1``
+
+   -  This will start the vncserver on port ``5901`` (5900+1)
+
+-  Use vnc client eg. ``tightvnc`` to connect to the instance using the
+   :1 and the passwd set by ``vncpasswd``.
+-  Install ``wish`` for ``Sue2``:``apt install wish``
+-  Now clone all the EDA tools from github in the root location eg.
+   ``/cad`` and tech/pdk in ``/tech``
+-  Add all the env variables in ``/etc/skel/.bashrc``
+-  Create all users and setup each users. For creating batch users, use
+   ``newuser`` command, see `this
+   article <https://www.tecmint.com/create-multiple-user-accounts-in-linux/>`__
+-  **CREATE SNAPSHOT** to use it to replicate VMs
+
+**ALTERNATIVES/ETC** - **Xfce4** is another alternative to **LXDE** but
+sue2 schematics are blank in xfce4 so we decided on LXDE. - Install
+packages ``xfce4 xfce4-goodies`` and some optional packages depending on
+your need eg. ``xorg dbus-x11 x11-xserver-utils`` -
+`noVNC <https://novnc.com>`__ is an alternative VNC client that connect
+through a webbrowser without having to download a client app. - git
+clone the `repo <https://github.com/novnc/noVNC>`__ - Use the
+``novnc_proxy`` script to automatically download and start websockify:
+``./utils/novnc_proxy --vnc localhost:5901`` - Make sure the vncserver
+is running and the above script should output an URL that you can
+navigate to connect to the instance. Use the vnc password to
+authenticate. Rememeber to substitute the hostname with the Public IP.
+
+-  To **start vncserver at boot**, followed the instruction from
+   `here <https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-18-04>`__
+
+   -  Create a service file for each user (see above doc):
+      ``$ sudo vim /etc/systemd/system/vncserver-user1@.service``
+   -  Make system aware of the file: ``$ sudo systemctl daemon-reload``
+   -  Enable the unit file (@1 is the display number):
+      ``$ sudo systemctl enable vncserver@1.service``
+   -  Start the service: ``$ sudo systemctl start vncserver@1``
+   -  You can see the status: ``$ sudo systemctl status vncserver@1``
+   -  Now it should start automatically on reboot.
+   -  Follow above steps for wach user
+
+-  If you want to connect using the **Windows RDP protocol** (For some
+   reason was very slow for us):
+
+.. code:: bash
+
+   sudo apt install xrdp;
+   sudo systemctl status xrdp;
+   sudo adduser xrdp ssl-cert;
+   sudo systemctl restart xrdp;
+
+   sudo ufw allow from 192.168.1.0/24 to any port 3389;
+   sudo ufw allow 3389
+
+**DEVELOPER READY**
+
+-  Following packages were required to compile source codes for all the
+   EDA tools:
+
+   -  ``sudo apt install build-essential linux-headers-‘uname -r‘``
+   -  ``sudo apt install bison flex libx11-dev libxaw7-dev libtool tcl-dev tk-dev tcsh tclsh tcllib wish libreadline-dev libncurces-dev``
+   -  ``sudo apt install automake autoconf texinfo`` (required for
+      ngspice git repo )
+
+-  Additional packages needed for various other tools:
+
+   -  ``libffi-dev git graphviz xdot pkg-config python3 libglu1-mesa-dev freeglut3-dev``
+   -  ``clang-6.0 gsl-bin libgsl0-dev m4 swig tcllib``
+
+-  **RESOURCES**
+
+   -  `Tutorial: Installing and configure VNC on Ubuntu
+      18-04 <https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-18-04>`__
+   -  `How to Create Multiple User Accounts in
+      Linux <https://www.tecmint.com/create-multiple-user-accounts-in-linux/>`__
+   -  `Headless X Session with
+      x11vnc <https://jasonmurray.org/posts/2021/x11vnc/>`__
+
+XILINX DESIGN SUITE
+-------------------
+
+This section will provide the steps to create a new project in Xilinx
+Design Suite
+
+| **Step 1:** - Open Xilinx and create a ``New Project`` from the file
+  menu. - Specify the name and path of the project you want to create
+  and set the “Top level source type: HDL(Read Only)”. - Under the **New
+  Project Wizard** window, change the project specifications according
+  to the board. - Some of the general specifications are: - Property
+  Name: Value - Evaluation Development Board: None Specified - Product
+  Category: All - Family: Spartan6 - Device: XC6SLX9 - Package: TQG144 -
+  Speed: -3 - Top-Level Source Type: HDL - Synthesis Tool:
+  XST(VHDL/Verilog)
+| - Simulator: ISim(VHDL/Verilog) - Preferred Language: Verilog -
+  Property Specification in Project File: Store all values - VHDL Source
+  Analysis Standards: VHDL-93 - Manual Compile Order: **Leave the
+  box(Y/N) unchanged** - Enable Message Filtering: **Leave the box(Y/N)
+  unchanged**
+
+| **Step 2:** - A new project navigation window will appear with desired
+  file name. - In project navigation window, right click on the
+  hierarchy code ``your file name`` and click on ``New Source`` and
+  specify the name of the program. - After clicking next a **New source
+  wizard** window will appear. - In **New source wizard** window, click
+  on ``Verilog Module``. Provide the file name and location and then
+  click on ``Next``. - In the next window provide the input, output or
+  bus ports(MSB/LSB) required in the code(optional). - In “New Source”
+  window, write the respective verilog code and click on ``Save``. -
+  Right click on the source file and click on ``Set as Top Module``.
+  This enables us to test and synthesize the code completely, otherwise
+  only syntax check is possible. If its already set then skip the step.
+| - Click on ``yes and continue``. - Click on ``Check Syntax`` in
+  **Process Window** under ``Synthesis XST`` and run other simulation
+  options.
+
+| **Step 3:** - After syntax check, right click on the Verilog file name
+  in the hierarchy and click on ``New Source``. - Click on
+  ``Implementation Constraints File``. This enables us to create a new
+  User Constraint File(.ucf). - Provide a name for the ucf file and
+  click on ``Next``.
+| - Under **Process Window**, click on ``Edit Constraints`` to edit the
+  UCF. - Edit the ucf providing all the required inputs and outputs
+  providing the respective ports and ``Save`` the file.
+
+**Step 4:** - Under **Process Window**, right click on
+``Generate Programming File`` and click on ``Rerun all``. This will lead
+to the synthesis of the code. - Now click on
+``Configure Target Device``. - A dialogue box will appear click on
+``Ok``. - An **ISE Impact** window will appear. - On the top-left corner
+click on the ``IMPACT Flows``. - Now double click on ``Boundary Scan``.
+- Right click on the center of the window and click on
+``Initialize Chain``. This will establish a relation between the PC and
+the FPGA board.
+
+**Step 5:** - Open the AHMY software from the task bar. - Click on
+``Connect``. - Click on ``Browse`` and open the .bit file created in the
+specified location. - Click on ``Show``. - Then click on ``Download``. -
+Switch on the respective switches on FPGA Board used for implementation
+of the design.
+
+PCB DESIGN USING EAGLE
+----------------------
+
+Eagle is a popular electronic design automation (EDA) software that is
+widely used in the industry for designing printed circuit boards (PCBs).
+Follow the steps instructions to get started with Eagle software.
+
+**Step 1: Download and Install Eagle Software** - `Go to the Eagle
+website <https://www.autodesk.com/products/eagle/free-download>`__ and
+click on the **Download Now** button. - Create an account or sign into
+your existing account. - Select the appropriate version of Eagle for
+your os (Windows, Mac, or Linux). - Follow the on-screen instructions to
+complete the installation.
+
+**Step 2: Creating a New Project** - Open the Eagle software. - Click on
+**File** and then **New** to create a new project. - Enter a name for
+your project and choose a location to save it. - Its a good practice to
+add description to your project do that by Right Click > Edit descripton
+- Select a schematic template for your project.
+
+**Step 3: Drawing Schematic** A PCB design schematic can be described as
+a circuit diagram or the functional diagram of electronic circuits.
+Symbols are used to represent components and show how they are connected
+electrically. - Open the schematic editor by clicking on **File** and
+then **New Schematic** - Use the tools on the left-hand side of the
+screen to draw the components of your circuit. You can also use the
+search function to find specific components. - Eagle comes with a
+built-in library of components that you can use in your designs but you
+can also create your own components or import them from other sources. -
+Download `Adafruit &
+SparkFun <https://www.autodesk.com/products/fusion-360/blog/library-basics-install-use-sparkfun-adafruit-libraries-autodesk-eagle>`__
+library to get all the components. - After downloading click on
+**Library** then select **Open library manager** Browse to the
+downloaded library and then hit **update all** in Library Menu. - Use
+**Add Part** tool to get the components or just do ``ctrl+L`` to
+activate the command line mode and type **add** then a pop window will
+appear showing the components list. - The most used tools include
+**Add**, **Move**, **Rotate**, and **Delete**. - To do the above
+operations, Click on the red colour plus(+) sign which is present either
+near the specific component or in the center of the component. - Use the
+**Net** tool or type **net** to draw wires between the pins of each
+component. Make sure to label each net with a unique name to avoid
+confusion. - Value and labels provide information about the components
+in your circuit. To add value and labels to your schematic, use the
+**Value** and **Label** tools. - Save your schematic by clicking on
+**File** and then **Save**. - After completing all, click Tools and do
+Electric Rule Check(ERC). - After completing the schematic, if you want
+to generate a netlist. A netlist is a list of all the components and
+their connections in the circuit. Click on **File > Export > Netlist**
+and save the file. - **Some hotkeys for drawing schematic are as
+follows:** - Add Part: ``ctrl+shift+A`` - Copy a component:
+``ctrl+shift+C`` - Delete a component: ``ctrl+D`` - Move: ``ctrl+M`` -
+Rename a component: ``ctrl+shift+N`` - Change value of component:
+``ctrl+shift+v`` - To run ERC: ``ctrl+shift+E`` - To see the error:
+``ctrl+E`` - **To transfer the schematic into layout in the schematic
+editor go the File and then Switch to board**
+
+**Step 4: Designing the PCB** Once you have created a schematic, the
+next step is to design the PCB board or layout. - Open the PCB editor by
+clicking on **File** and then **Switch to Board** - Click on **File**
+and then **Import** to import your schematic. - Use the tools on the
+left-hand side of the screen to place the components on the PCB. - Plan
+a floor plan to place the components in their suitable places to use
+more effective area. - Use the **Route** tool to connect the components
+with copper traces. - Eagle provides 2-layer PCB in the free version in
+which you can route both in top and bottom layer. - Add vias and
+through-holes as needed. - Some more features are Polygon, ratsnest,
+renaming and changing the value all you can do using the tools available
+on the left hand side of the screen. - Save your PCB design by clicking
+on **File** and then **Save** - Before finalizing the design, check the
+design rules. Design rules ensure that the board meets the
+manufacturer’’s specifications. Click on **DRC** and run the check.
+
+**Step 5: Exporting the Design** After completing the design, export it
+in the required format. Gerber files are the standard file format used
+by manufacturers. Click on **File > Cam processor** and save the files.
+
+\*\* RESOURCES \*\* - Great tutorials at
+`Sparkfun <https://sparkfun.com>`__ - `Eagle
+Schematic <https://learn.sparkfun.com/tutorials/using-eagle-schematic/all>`__
+- `Eagle PCB
+Layout <https://learn.sparkfun.com/tutorials/using-eagle-board-layout>`__
+- `Install and Setup
+Eagle <https://learn.sparkfun.com/tutorials/how-to-install-and-setup-eagle>`__
+- `Creating SMD
+PCB <https://learn.sparkfun.com/tutorials/designing-pcbs-advanced-smd>`__
+- `Creating SMD
+footprints <https://learn.sparkfun.com/tutorials/designing-pcbs-smd-footprints>`__
+- `Creating Custom
+Footprints <https://learn.sparkfun.com/tutorials/making-custom-footprints-in-eagle>`__
+
+OpenROAD INSTALLATION
+---------------------
+
+**RESOURCES** - `OpenROAD Flow Scripts
+Tutorial <https://openroad-flow-scripts.readthedocs.io/en/latest/tutorials/FlowTutorial.html#configuring-the-design>`__
+- `Vijayan’s Video
+Tutorials <https://drive.google.com/drive/folders/1gAh5-9hbRfipVhKopFb635S3WDPAS3_k?usp=sharing>`__
+
+**CentOS 7 LOCAL INSTALLATION**
+
+-  ``cd; mkdir ORFS; cd ORFS``
+-  ``git clone --recursive https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts``
+-  ``cd OpenROAD-flow-scripts``
+-  ``sudo ./etc/DependencyInstaller.sh``
+-  ``source /opt/rh/devtoolset-8/enable``
+-  ``source /opt/rh/llvm-toolset-7.0/enable``
+-  ``./build_openroad.sh --local``
+
+   -  This will locally install all tools in the ``tools`` folder.
+
+-  ``source ./setup_env.sh`` to load the environement in a ``bash``
+   shell. You will see a following message:
+
+   -  ``OPENROAD: <path>/OpenROAD-flow-scripts/tools/OpenROAD``
+
+-  You can follow the `OpenROAD Flow Scripts
+   Tutorial <https://openroad-flow-scripts.readthedocs.io/en/latest/tutorials/FlowTutorial.html#configuring-the-design>`__
+   to start and continue with the flow.
+-  For a quick check of the flow:
+
+   -  ``cd flow``
+   -  ``make DESIGN_CONFIG=./designs/sky130hd/ibex/config.mk``
+
+**SYSTEM-WIDE INSTALLATION**
+
+-  After compiling the tools, ``tar`` the ``OpenROAD-flow-scripts``
+   directory and copy to the ``srv03.vlsi.silicon.ac.in``
+-  Digital tools are installed in ``/CAD2`` which is mounted from
+   ``srv03`` from ``/cad/CAD2``
+-  Untar the ORFS tarball in ``/cad/CAD2/opensrc``
+-  ``cd <ORFS-PATH>/OpenROAD-flow-scripts; sudo ./etc/DependencyInstaller.sh``
+   : Installs all required dependencies.
+-  create a ``modulefile`` with the following env variables:
+
+.. code:: csh
+
+   set  orfsroot  /CAD2/opensrc/OpenROAD-flow-scripts/tools
+   setenv  OPENROAD $orfsroot/OpenROAD
+   append-path PATH $orfsroot/install/OpenROAD/bin:$orfsroot/install/yosys/bin:$orfsroot/install/LSOracle/bin
+
+**QUICK TEST**
+
+-  The digital flow test in the ORFS directory is about 1G so don’t run
+   the test flow in your home directory so you don’t run out disk space.
+-  ``mkdir -p /home/local/simulation/<USER>/ORFS`` and ``cd`` to that
+   directory.
+-  ``tar -xzf <PATH-TO-TARBALL>``
+-  ``cd flow``
+-  ``module load tools/opensrc/openROAD``
+-  ``make DESIGN_CONFIG=./designs/sky130hd/gcd/config.mk`` (complete in
+   about 3 min)
+-  ``make DESIGN_CONFIG=./designs/sky130hd/ibex/config.mk`` (complete in
+   about 20 min)
+
+**SIMPLE TUTORIAL**
+
+-  Students can go through **OpenROAD SK3 Flow Structure** to **OpenROAD
+   SK9 flow tutorial** from `Vijayan’s Video
+   Tutorials <https://drive.google.com/drive/folders/1gAh5-9hbRfipVhKopFb635S3WDPAS3_k?usp=sharing>`__
+   for understanding ORFS flow and how to use GUI.
+-  It is similar to this `flow tutorial
+   document <https://openroad-flow-scripts.readthedocs.io/en/latest/tutorials/FlowTutorial.html#configuring-the-design>`__
+-  For a simple example take ``gcd`` design (Flow complete in 3 mins)
+   instead of ``ibex`` (Flow complete in 20 mins).
+-  You can follow a step-by-step flow eg.:
+
+   -  ``make DESIGN_CONFIG=./designs/sky130hd/gcd/config.mk synth``
+   -  ``make DESIGN_CONFIG=./designs/sky130hd/gcd/config.mk floorplan``
+   -  ``make DESIGN_CONFIG=./designs/sky130hd/gcd/config.mk finish``
