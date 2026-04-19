@@ -10,6 +10,8 @@ Silicon University, Odisha
 
    getStarted
 
+.. toctree::
+   :maxdepth: 2
    :caption: Wiki
 
    cad-it
