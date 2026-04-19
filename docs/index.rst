@@ -1,4 +1,4 @@
-Chipathon 2026
+Silicon University, Odisha
 ==============
 
 .. include:: ../README.rst
@@ -6,7 +6,10 @@ Chipathon 2026
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of Contents
+   :caption: Content
 
    getStarted
 
+   :caption: Wiki
+
+   cad-it
