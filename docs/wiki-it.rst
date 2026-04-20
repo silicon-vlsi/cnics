@@ -1828,13 +1828,16 @@ Disabling Internet Access
 Creating readthedocs.io
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Create a public repo in github (eg. ``cnics``)
-  - Add necessary files: ``.readthedcos.yaml``, ``docs/{conf.py, requirements.txt, index.rst}``
-- Login to the ``readthedocs.org`` with the same github account.
-  - Change **settings** such that only selected repos from the account can be used.
-  - Click ``Add Project`` and select the repo.
-  - The **name** field is the one which becomes name of the site eg. ``https://cnics.readthedocs.io`` if you choose the name ``cnics``.
-  - And it should automatically build it. Build logs can viewed for any errors/warnings. 
+* Create a public repo in github (eg. ``cnics``)
+
+  * Add necessary files: ``.readthedcos.yaml``, ``docs/{conf.py, requirements.txt, index.rst}``
+
+* Login to the ``readthedocs.org`` with the same github account.
+
+  * Change **settings** such that only selected repos from the account can be used.
+  * Click ``Add Project`` and select the repo.
+  * The **name** field is the one which becomes name of the site eg. ``https://cnics.readthedocs.io`` if you choose the name ``cnics``.
+  * And it should automatically build it. Build logs can viewed for any errors/warnings. 
 
 
 Creating a Kickstart USB Boot Media
