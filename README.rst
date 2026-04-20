@@ -1,5 +1,3 @@
-Center For Nanodevices, Integrated Circuits and Systems (CNICS)
-==============================================================
 
 .. image:: https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest
     :target: https://example-sphinx-basic.readthedocs.io/en/latest/?badge=latest
