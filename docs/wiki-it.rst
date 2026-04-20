@@ -347,55 +347,30 @@ Migrating NFS/NIS Server
 
 **Migrating NIS Server**
 
--  Backup old server first
--  Copy ``/var/yp`` and key configs (``/etc/ypserv.conf``,
+*  Backup old server first
+*  Copy ``/var/yp`` and key configs (``/etc/ypserv.conf``,
    ``/etc/yp.conf``, ``/var/yp/Makefile``) from old to new via rsync
    (probably as root):
 
-   -  ``rsync -avz old-server:/var/yp/ /var/yp/``
-   -  ``rsync -avz old-server:/etc/yp* /etc/``
-   -  ``rsync -avz old-server:/etc/ypserv* /etc/.``
+   *  ``rsync -avz old-server:/var/yp/ /var/yp/``
+   *  ``rsync -avz old-server:/etc/yp* /etc/``
+   *  ``rsync -avz old-server:/etc/ypserv* /etc/.``
 
--  Prepare ``ypservers`` Map, on new server in ``/var/yp``:
+*  Prepare ``ypservers`` Map, on new server in ``/var/yp``:
 
-   -  ``sudo /usr/lib64/yp/makedbm -u <nisdomainname>/ypservers | sudo tee -a tmpservers``
-   -  Change ``YP_MASTER_NAME`` to new-server hostname and create new
+   *  ``sudo /usr/lib64/yp/makedbm -u <nisdomainname>/ypservers | sudo tee -a tmpservers``
+   * Change ``YP_MASTER_NAME`` to new-server hostname and create new
       map:
-   -  ``sudo /usr/lib64/yp/makedbm tmpservers <nisdomainname>/ypservers``
+   * ``sudo /usr/lib64/yp/makedbm tmpservers <nisdomainname>/ypservers``
 
--  **IMPORTANT** The new server does not have NIS users as local users
-   so running ``make -C /var/yp`` will remove all NIS users. Following
-   steps to fix it.
+* Copy the relevant users/groups/shadows from old to new server
 
-   -  Create a new dir:
+   * Copy ``/etc/{passwd,shadow,group,gshadow}`` from old server
+   * ``chmod 600 {shadow,gshadow}``
+   * Keep the relevant *users* and *groups*. Check ``/etc{passwd,group}`` in the new server to make sure no conflicts.
+   * Append it in the new server
+   * Rebuild maps: ``sudo make -C /var/yp``
 
-      -  ``sudo mkdir -p /var/yp/ypfiles``
-      -  ``sudo chmod 700 /var/yp/ypfiles``
-
-   -  Copy passwd/group/shadow/gshadow from the OLD master:
-
-      -  ``sudo rsync -avz root@OLD_MASTER:/etc/passwd  /var/yp/ypfiles/passwd``
-      -  ``sudo rsync -avz root@OLD_MASTER:/etc/group   /var/yp/ypfiles/group``
-      -  ``sudo rsync -avz root@OLD_MASTER:/etc/shadow  /var/yp/ypfiles/shadow``
-      -  ``sudo rsync -avz root@OLD_MASTER:/etc/gshadow /var/yp/ypfiles/gshadow``
-
-   -  Check and lock down permissions if not locked
-
-      -  ``sudo chown root:root /var/yp/ypfiles/{passwd,group,shadow,gshadow}``
-      -  ``sudo chmod 0644 /var/yp/ypfiles/{passwd,group}``
-      -  ``sudo chmod 0000 /var/yp/ypfiles/{shadow,gshadow}``
-
-   -  Edit ``/var/yp/Makefile`` on the NEW master
-
-      -  Change : ``YPPWDDIR = /var/yp/ypfiles``
-
-   -  Rebuild maps: ``sudo make -C /var/yp``
-
-- **NOTE** in order to change a NIS user eg. add a group to an user, the source file needs to be updated.
-  - `sudoedit ypfiles/groups`
-    - eg. `xfab:user1,user2,user3`
-  - `sudoedit ypfiles/gshadow`
-- Rebuild: `sudo make -C /var/yp`
 
 Setting up new CentOS 7 Desktop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
