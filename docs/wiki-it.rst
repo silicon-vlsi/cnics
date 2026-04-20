@@ -391,6 +391,12 @@ Migrating NFS/NIS Server
 
    -  Rebuild maps: ``sudo make -C /var/yp``
 
+- **NOTE** in order to change a NIS user eg. add a group to an user, the source file needs to be updated.
+  - `sudoedit ypfiles/groups`
+    - eg. `xfab:user1,user2,user3`
+  - `sudoedit ypfiles/gshadow`
+- Rebuild: `sudo make -C /var/yp`
+
 Setting up new CentOS 7 Desktop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1818,6 +1824,18 @@ Disabling Internet Access
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  ``sudo nmtui`` and remove the **Gateway** and **DNS Server(s)**
+
+Creating readthedocs.io
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Create a public repo in github (eg. ``cnics``)
+  - Add necessary files: ``.readthedcos.yaml``, ``docs/{conf.py, requirements.txt, index.rst}``
+- Login to the ``readthedocs.org`` with the same github account.
+  - Change **settings** such that only selected repos from the account can be used.
+  - Click ``Add Project`` and select the repo.
+  - The **name** field is the one which becomes name of the site eg. ``https://cnics.readthedocs.io`` if you choose the name ``cnics``.
+  - And it should automatically build it. Build logs can viewed for any errors/warnings. 
+
 
 Creating a Kickstart USB Boot Media
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

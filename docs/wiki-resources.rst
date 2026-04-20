@@ -4,30 +4,14 @@ RESOURCES
 LINUX BASICS
 ------------
 
-**X WINDOW SYSTEM** - XFree86 was the de facto X Server till 2004 after
-which a fork of it is maintained by non-profit X.Org foundation which is
-the predominant implementation now. - Key components of a X Window
-System: - *Display Manager (DM)*: Job is to authenticate users, log them
-in and startup initial environment using startup scripts. The DM also
-start the X Server. - *X Server*: defines an abstract interface to the
-system’s bitmapped displays and input devices. It understands only basic
-drawing primitives over a network API which allows it to run on
-computers which are seprate from the client and, support variety of
-window managers and widgets. - *Window Manager*: which allows users to
-move, resize, minimize and maximize windows and allows use virtual
-desktops as well. - **Display Manger** presents the user with a
-graphical login screen which is not necessary and some users prefer to
-start X from the console or from their **.login** script by running
-**startx** which is a wrapper for **xinit** that starts the X server.
-**xdm** (X display manager) is the original DM but **gmd** (GNOME) and
-**kdm** (KDE) are the most popular ones now. Configuration files for
-**xdm, gdm** or **kdm** are in **/etc/X11**. The display manager’s final
-duty is to execute **Xsession**, a shell script to setup desktop
-environment which is often found in **/etc/X11/{xdm,gdm,kdm}**. The
-**Xsession** also executes the user’s personal **~/.xession**. All the
-commands are run in the background except the *last one* which is the
-*Window Manager*. Once you exit the WM the DM logs the user out and the
-session ends.
+**X WINDOW SYSTEM** 
+
+- XFree86 was the de facto X Server till 2004 after which a fork of it is maintained by non-profit X.Org foundation which is the predominant implementation now. 
+- Key components of a X Window System: 
+- *Display Manager (DM)*: Job is to authenticate users, log them in and startup initial environment using startup scripts. The DM also start the X Server. 
+- *X Server*: defines an abstract interface to the system’s bitmapped displays and input devices. It understands only basic drawing primitives over a network API which allows it to run on computers which are seprate from the client and, support variety of window managers and widgets. 
+- *Window Manager*: which allows users to move, resize, minimize and maximize windows and allows use virtual desktops as well. 
+- **Display Manger** presents the user with a graphical login screen which is not necessary and some users prefer to start X from the console or from their **.login** script by running **startx** which is a wrapper for **xinit** that starts the X server.  **xdm** (X display manager) is the original DM but **gmd** (GNOME) and **kdm** (KDE) are the most popular ones now. Configuration files for **xdm, gdm** or **kdm** are in **/etc/X11**. The display manager’s final duty is to execute **Xsession**, a shell script to setup desktop environment which is often found in **/etc/X11/{xdm,gdm,kdm}**. The **Xsession** also executes the user’s personal **~/.xession**. All the commands are run in the background except the *last one* which is the *Window Manager*. Once you exit the WM the DM logs the user out and the session ends.
 
 -  To **run an X application**, clients must be told what display to
    connect to and what screen to inhabit on that display. Once
@@ -106,7 +90,7 @@ paragraphs. There should be whitespace between paragraphs.
 
    There should be no margin below this final sentence.
 
-Header 1
+Markdown
 ========
 
 This is a normal paragraph following a header. Bacon ipsum dolor sit
