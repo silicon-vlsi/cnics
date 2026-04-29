@@ -192,6 +192,19 @@ Frequently Used Commands
 
    -  ``git reset <file>`` : undo changes
 
+- **DOCKER**
+
+  - ``docker <COMMAND>``:
+
+    - ``ps`` : List containers
+    - ``images`` : List images
+    - ``pull`` : Download an image from registry eg.
+      - ``docker pull hpretl/iic-osic-tools:chipathon26``
+
+  - ``docker save -o osic-tools.tar hpretl/iic-osic-tools:chipathon26`` : saves the image as a tar ball
+  - ``docker load -i osic-tools.tar`` : loads the docker from the tarball.
+
+
 Housekeeping
 ~~~~~~~~~~~~
 
