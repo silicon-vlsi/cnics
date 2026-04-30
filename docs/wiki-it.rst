@@ -204,6 +204,46 @@ Frequently Used Commands
   - ``docker save -o osic-tools.tar hpretl/iic-osic-tools:chipathon26`` : saves the image as a tar ball
   - ``docker load -i osic-tools.tar`` : loads the docker from the tarball.
 
+Docker 
+~~~~~~~
+- **Changing Docker's Default Root Directory**
+  
+  - Docker's default root dir is ``/var/lib/{docker,containerd}``
+  - ``mkdir -p /foss/docker /foss/containerd``
+  - If migrating:
+    
+    - ``sudo rsync -aHAX --numeric-ids /var/lib/docker/ /foss/docker/``
+    - ``sudo rsync -aHAX --numeric-ids /var/lib/containerd/ /foss/containerd/``
+  - Stop containerd and docker daemons:
+    - ``sudo systemctl stop docker``
+    - ``sudo systemctl stop containerd``
+
+  - Create/Edit ``/etc/docker/daemon.json``
+
+.. code:: json
+
+   {
+      "data-root": "/foss/docker"
+   }
+
+    
+  - Uncomment/edit ``/etc/containerd/config.toml``
+
+
+.. code:: bash
+
+   root = "/foss/containerd"
+   state = "/run/containerd"
+  
+  - Reload and start the daemons:
+
+.. code:: bash
+
+   sudo systemctl daemon-reload
+   sudo systemctl start docker
+   sudo systemctl start containerd
+
+  - Check **root directory** using ``docker info``
 
 Housekeeping
 ~~~~~~~~~~~~
